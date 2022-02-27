@@ -19,6 +19,10 @@ function createBoard() {
     tile.classList = shuffledArray[i];
     board.appendChild(tile);
     tiles.push(tile);
+
+    tile.addEventListener("click", (e) => {
+      click(tile);
+    });
   }
 
   //add adj numbers
@@ -92,3 +96,19 @@ function createBoard() {
 }
 
 createBoard();
+
+//when clicked on a tile
+
+function click(tile) {
+  if (tile.classList.contains("bomb")) {
+    alert("You have triggered the bomb! Game over.");
+  } else {
+    let number = tile.getAttribute("data");
+    if (number != 0) {
+      tile.classList.add("checked"); // add another class to the tile
+      tile.innerHTML = number;
+      return;
+    }
+    tile.classList.add("checked"); // if the number === 0 it is onyl given a class, innerHTML given.
+  }
+}

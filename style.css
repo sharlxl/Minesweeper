@@ -21,3 +21,7 @@ body {
 .bomb {
   background-color: rgb(131, 55, 55);
 }
+
+.checked {
+  background-color: rgb(95, 179, 116);
+}
