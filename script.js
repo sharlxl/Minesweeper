@@ -4,6 +4,8 @@ const board = document.querySelector(".board");
 const width = 10;
 const bombs = 20;
 const tiles = [];
+let isGameOver = false;
+let markers = 0;
 
 function createBoard() {
   //create bombs and safe tiles
@@ -23,6 +25,11 @@ function createBoard() {
     tile.addEventListener("click", (e) => {
       click(tile);
     });
+
+    tile.oncontextmenu = function (e) {
+      e.preventDefault();
+      addMarked(tile);
+    };
   }
 
   //add adj numbers
@@ -97,11 +104,17 @@ function createBoard() {
 
 createBoard();
 
-//when clicked on a tile
-
+//when left click on a tile
 function click(tile) {
-  if (tile.classList.contains("bomb")) {
-    alert("You have triggered the bomb! Game over.");
+  if (isGameOver) {
+    return;
+  } else if (
+    tile.classList.contains("checked") ||
+    tile.classList.contains("markers")
+  ) {
+    return;
+  } else if (tile.classList.contains("bomb")) {
+    gameOver(tile);
   } else {
     let number = tile.getAttribute("data");
     if (number != 0) {
@@ -110,5 +123,55 @@ function click(tile) {
       return;
     }
     tile.classList.add("checked"); // if the number === 0 it is onyl given a class, innerHTML given.
+  }
+}
+
+//when rightclick on the tile
+
+function addMarked(tile) {
+  if (isGameOver) {
+    return;
+  } else if (!tile.classList.contains("checked") && markers < bombs) {
+    if (!tile.classList.contains("markers")) {
+      tile.classList.add("markers");
+      tile.innerHTML = "marked";
+      markers++;
+      checkForWin();
+    } else {
+      tile.classList.remove("markers");
+      tile.innerHTML = "";
+      markers--;
+    }
+  }
+}
+
+function gameOver(tile) {
+  alert("You have triggered the bomb! Game over.");
+  isGameOver = true;
+
+  tiles.forEach((tile) => {
+    if (tile.classList.contains("bomb")) {
+      tile.innerHTML = "bomb";
+      tile.classList.remove("bomb");
+      tile.classList.add("checked");
+    }
+  });
+}
+
+function checkForWin() {
+  let match = 0;
+
+  for (let i = 0; i < tiles.length; i++) {
+    if (
+      tiles[i].classList.contains("markers") &&
+      tiles[i].classList.contains("bomb")
+    ) {
+      match++;
+    }
+
+    if (match === bombs) {
+      alert("You have won! You found all the bombs!");
+      isGameOver = true;
+    }
   }
 }
