@@ -19,6 +19,7 @@ function createBoard() {
     const tile = document.createElement("div");
     tile.setAttribute("id", i);
     tile.classList = shuffledArray[i];
+    tile.classList.add("hidden");
     board.appendChild(tile);
     tiles.push(tile);
 
@@ -106,6 +107,8 @@ createBoard();
 
 //when left click on a tile
 function click(tile) {
+  let tileId = tile.id;
+
   if (isGameOver) {
     return;
   } else if (
@@ -119,9 +122,11 @@ function click(tile) {
     let number = tile.getAttribute("data");
     if (number != 0) {
       tile.classList.add("checked"); // add another class to the tile
+      tile.classList.remove("hidden");
       tile.innerHTML = number;
       return;
     }
+    checkTile(tile, tileId);
     tile.classList.add("checked"); // if the number === 0 it is onyl given a class, innerHTML given.
   }
 }
@@ -152,10 +157,65 @@ function gameOver(tile) {
   tiles.forEach((tile) => {
     if (tile.classList.contains("bomb")) {
       tile.innerHTML = "bomb";
-      tile.classList.remove("bomb");
-      tile.classList.add("checked");
+      tile.classList.remove("hidden");
     }
   });
+}
+
+//similar method to the above for checkign adj tiles
+function checkTile(tile, tileId) {
+  const leftEdge = tileId % width === 0;
+  const rightEdge = tileId % width === width - 1;
+
+  setTimeout(() => {
+    if (tileId > 0 && !leftEdge) {
+      const newId = parseInt(tileId) - 1;
+      const newTile = document.getElementById(newId);
+      click(newTile);
+    }
+
+    if (tileId > 9 && !rightEdge) {
+      const newId = parseInt(tileId) + 1 - width;
+      const newTile = document.getElementById(newId);
+      click(newTile);
+    }
+
+    if (tileId > 10) {
+      const newId = parseInt(tileId) - width;
+      const newTile = document.getElementById(newId);
+      click(newTile);
+    }
+
+    if (tileId > 11 && !leftEdge) {
+      const newId = parseInt(tileId) - 1 - width;
+      const newTile = document.getElementById(newId);
+      click(newTile);
+    }
+
+    if (tileId < 98 && !rightEdge) {
+      const newId = parseInt(tileId) + 1;
+      const newTile = document.getElementById(newId);
+      click(newTile);
+    }
+
+    if (tileId < 90 && !leftEdge) {
+      const newId = parseInt(tileId) - 1 + width;
+      const newTile = document.getElementById(newId);
+      click(newTile);
+    }
+
+    if (tileId < 88 && !rightEdge) {
+      const newId = parseInt(tileId) + 1 + width;
+      const newTile = document.getElementById(newId);
+      click(newTile);
+    }
+
+    if (tileId < 89) {
+      const newId = parseInt(tileId) + width;
+      const newTile = document.getElementById(newId);
+      click(newTile);
+    }
+  }, 10);
 }
 
 function checkForWin() {
