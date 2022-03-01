@@ -2,12 +2,25 @@
 
 const board = document.querySelector(".board");
 const width = 10;
-const bombs = 20;
+const bombs = 15;
 const tiles = [];
 let isGameOver = false;
 let markers = 0;
+const bombsMarked = document.querySelector("#bombs-marked");
+const refreshBtn = document.querySelector("#refresh");
+
+//reloads the page
+refreshBtn.addEventListener("click", (e) => {
+  if (confirm("restart the game?") == true) {
+    location.reload();
+  } else {
+    return;
+  }
+});
 
 function createBoard() {
+  bombsMarked.innerHTML = bombs + " left";
+
   //create bombs and safe tiles
   const bombsArray = Array(bombs).fill("bomb");
   const safeArray = Array(width * width - bombs).fill("safe");
@@ -27,6 +40,7 @@ function createBoard() {
       click(tile);
     });
 
+    //right click listener
     tile.oncontextmenu = function (e) {
       e.preventDefault();
       addMarked(tile);
@@ -98,7 +112,6 @@ function createBoard() {
       }
       //
       tiles[i].setAttribute("data", bombNearby);
-      console.log(tiles[i]);
     }
   }
 }
@@ -127,7 +140,8 @@ function click(tile) {
       return;
     }
     checkTile(tile, tileId);
-    tile.classList.add("checked"); // if the number === 0 it is onyl given a class, innerHTML given.
+    tile.classList.add("checked"); // if the number === 0 it is only given a class, innerHTML given.
+    tile.classList.remove("hidden");
   }
 }
 
@@ -139,16 +153,20 @@ function addMarked(tile) {
   } else if (!tile.classList.contains("checked") && markers < bombs) {
     if (!tile.classList.contains("markers")) {
       tile.classList.add("markers");
-      tile.innerHTML = "marked";
+      tile.innerHTML = "❓";
       markers++;
+      bombsMarked.innerHTML = bombs - markers + " left";
       checkForWin();
     } else {
       tile.classList.remove("markers");
       tile.innerHTML = "";
       markers--;
+      bombsMarked.innerHTML = bombs - markers + " left";
     }
   }
 }
+
+function updateScore() {}
 
 function gameOver(tile) {
   alert("You have triggered the bomb! Game over.");
@@ -156,7 +174,7 @@ function gameOver(tile) {
 
   tiles.forEach((tile) => {
     if (tile.classList.contains("bomb")) {
-      tile.innerHTML = "bomb";
+      tile.innerHTML = "💥";
       tile.classList.remove("hidden");
     }
   });
@@ -230,8 +248,16 @@ function checkForWin() {
     }
 
     if (match === bombs) {
+      if ((isGameOver = true)) {
+        tiles.forEach((tile) => {
+          if (tile.classList.contains("bomb")) {
+            tile.innerHTML = "💣";
+            tile.classList.remove("hidden");
+            tile.classList.remove("markers");
+          }
+        });
+      }
       alert("You have won! You found all the bombs!");
-      isGameOver = true;
     }
   }
 }
