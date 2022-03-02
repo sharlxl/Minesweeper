@@ -1,13 +1,13 @@
 "use strict";
 
 const board = document.querySelector(".board");
+const bombsMarked = document.querySelector("#bombs-marked");
+const refreshBtn = document.querySelector("#refresh");
 const width = 10;
-const bombs = 15;
+const bombs = 5;
 const tiles = [];
 let isGameOver = false;
 let markers = 0;
-const bombsMarked = document.querySelector("#bombs-marked");
-const refreshBtn = document.querySelector("#refresh");
 
 //reloads the page
 refreshBtn.addEventListener("click", (e) => {
@@ -137,12 +137,24 @@ function click(tile) {
       tile.classList.add("checked"); // add another class to the tile
       tile.classList.remove("hidden");
       tile.innerHTML = number;
+      if (number == 1) {
+        tile.classList.add("one");
+      }
+      if (number == 2) {
+        tile.classList.add("two");
+      }
+      if (number == 3) {
+        tile.classList.add("three");
+      }
+      if (number == 4) {
+        tile.classList.add("four");
+      }
       return;
     }
-    checkTile(tile, tileId);
-    tile.classList.add("checked"); // if the number === 0 it is only given a class, innerHTML given.
-    tile.classList.remove("hidden");
   }
+  checkTile(tile, tileId);
+  tile.classList.add("checked"); // if the number === 0 it is only given a class, innerHTML given.
+  tile.classList.remove("hidden");
 }
 
 //when rightclick on the tile
@@ -165,8 +177,6 @@ function addMarked(tile) {
     }
   }
 }
-
-function updateScore() {}
 
 function gameOver(tile) {
   alert("You have triggered the bomb! Game over.");
@@ -246,18 +256,17 @@ function checkForWin() {
     ) {
       match++;
     }
+  }
+  if (match === bombs) {
+    alert("You have won! You found all the bombs!");
+    isGameOver = true;
 
-    if (match === bombs) {
-      if ((isGameOver = true)) {
-        tiles.forEach((tile) => {
-          if (tile.classList.contains("bomb")) {
-            tile.innerHTML = "💣";
-            tile.classList.remove("hidden");
-            tile.classList.remove("markers");
-          }
-        });
+    tiles.forEach((tile) => {
+      if (tile.classList.contains("bomb")) {
+        tile.innerHTML = "💣";
+        tile.classList.remove("hidden");
+        tile.classList.remove("markers");
       }
-      alert("You have won! You found all the bombs!");
-    }
+    });
   }
 }
