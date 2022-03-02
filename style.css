@@ -20,8 +20,8 @@ h2 {
 .board {
   display: flex;
   flex-wrap: wrap;
-  width: 420px;
-  height: 420px;
+  width: 411px;
+  height: 411px;
   margin: 20px;
   background-color: rgb(56, 56, 56);
   border: 0.1px solid rgb(129, 129, 129);
@@ -36,7 +36,7 @@ h2 {
 }
 
 .board div:hover {
-  border: 1px solid red;
+  background-color: rgba(255, 0, 0, 0.2);
 }
 
 .bomb {
@@ -56,4 +56,23 @@ h2 {
   position: relative;
   bottom: 0;
   border: none;
+}
+
+@media (max-width: 670px) {
+  .sidebar {
+    width: 200px;
+    padding: 5px;
+    text-align: center;
+  }
+
+  .board {
+    width: 211px;
+    height: 211px;
+  }
+
+  .board div {
+    width: 20px;
+    height: 20px;
+    font-size: 15px;
+  }
 }
