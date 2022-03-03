@@ -19,7 +19,7 @@ refreshBtn.addEventListener("click", (e) => {
 });
 
 function createBoard() {
-  bombsMarked.innerHTML = bombs + " left";
+  bombsMarked.innerHTML = `💣 ${bombs} left 💣`;
 
   //create bombs and safe tiles
   const bombsArray = Array(bombs).fill("bomb");
@@ -152,6 +152,10 @@ function click(tile) {
       return;
     }
   }
+
+  //if none of the conditions are met this check tile will run.
+  //meaning the tile that has data number 0 will fan out after goin thru a recursion
+  //this will break when it fans out to a tile with a data number > 0
   checkTile(tile, tileId);
   tile.classList.add("checked"); // if the number === 0 it is only given a class, innerHTML given.
   tile.classList.remove("hidden");
@@ -167,13 +171,13 @@ function addMarked(tile) {
       tile.classList.add("markers");
       tile.innerHTML = "❓";
       markers++;
-      bombsMarked.innerHTML = bombs - markers + " left";
+      bombsMarked.innerHTML = `💣 ${bombs - markers} left 💣`;
       checkForWin();
     } else {
       tile.classList.remove("markers");
       tile.innerHTML = "";
       markers--;
-      bombsMarked.innerHTML = bombs - markers + " left";
+      bombsMarked.innerHTML = `💣 ${bombs - markers} left 💣`;
     }
   }
 }
