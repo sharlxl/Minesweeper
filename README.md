@@ -1,5 +1,5 @@
 # Minesweeper
-https://minesweeper-black.vercel.app/
+https://minesweeper-black.vercel.app/\
 Javascript, HTML and CSS based game
 
 # Motivation
