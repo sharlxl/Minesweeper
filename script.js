@@ -1,276 +1,256 @@
 "use strict";
 
-const board = document.querySelector(".board");
-const bombsMarked = document.querySelector("#bombs-marked");
-const refreshBtn = document.querySelector("#refresh");
-const width = 10;
-const bombs = 15;
-const tiles = [];
+// const tiles = [];
+// const level1 = {
+//   size: 10,
+//   bombs: 15,
+// };
+
+// variable for the board
+let BOARD_SIZE = 10;
+let BOMBS = 10;
 let isGameOver = false;
-let markers = 0;
+let gameWin = false;
+let marked = 0;
 
-//reloads the page
-refreshBtn.addEventListener("click", (e) => {
-  if (confirm("restart the game?") == true) {
-    location.reload();
-  } else {
-    return;
-  }
+/**
+ *
+ * text for bombs left
+ *
+ */
+const text = document.querySelector("#text");
+const h2 = document.createElement("h2");
+h2.textContent = `Bombs Left: ${BOMBS}`;
+text.append(h2);
+
+/**
+ *
+ * button to reset
+ *
+ */
+const settings = document.querySelector(".settings");
+const resetBtn = document.createElement("button");
+resetBtn.className = "button";
+resetBtn.textContent = "Try Again?";
+resetBtn.addEventListener("click", () => {
+  location.reload();
 });
+settings.append(resetBtn);
 
-function createBoard() {
-  bombsMarked.innerHTML = `💣 ${bombs} left 💣`;
+/**
+ *
+ * function to create a board
+ *
+ * */
 
-  //create bombs and safe tiles
-  const bombsArray = Array(bombs).fill("bomb");
-  const safeArray = Array(width * width - bombs).fill("safe");
-  const combinedArray = safeArray.concat(bombsArray);
-  const shuffledArray = combinedArray.sort(() => Math.random() - 0.5);
+const createBoard = (size, bombs) => {
+  const board = [];
+  const bombPositions = getBombPositions(size, bombs);
+  console.log(bombPositions);
+  for (let x = 0; x < size; x++) {
+    const row = [];
+    for (let y = 0; y < size; y++) {
+      const tileDiv = document.createElement("div");
+      tileDiv.setAttribute("class", "HIDDEN");
 
-  //create tiles inside the board
-  for (let i = 0; i < width * width; i++) {
-    const tile = document.createElement("div");
-    tile.setAttribute("id", i);
-    tile.classList = shuffledArray[i];
-    tile.classList.add("hidden");
-    board.appendChild(tile);
-    tiles.push(tile);
+      const tile = {
+        tileDiv,
+        x,
+        y,
+        bomb: bombPositions.some((p) => positionMatch(p, { x, y })),
+        get status() {
+          return this.tileDiv.className;
+        },
+        set status(value) {
+          this.tileDiv.className = value;
+        },
+      };
+      row.push(tile);
+    }
+    board.push(row);
+  }
+  return board;
+};
 
-    tile.addEventListener("click", (e) => {
-      click(tile);
+const boardDiv = document.querySelector(".board");
+/**
+ *
+ * buttons for level
+ *
+ */
+const levels = document.querySelector(".levels");
+const level1Btn = document.createElement("button");
+level1Btn.className = "button";
+level1Btn.textContent = "Level 1";
+level1Btn.addEventListener("click", () => {
+  BOARD_SIZE = 10;
+  BOMBS = 10;
+  main();
+});
+levels.append(level1Btn);
+
+const level2Btn = document.createElement("button");
+level2Btn.className = "button";
+level2Btn.textContent = "Level 2";
+level2Btn.addEventListener("click", () => {
+  BOARD_SIZE = 20;
+  BOMBS = 20;
+  main();
+});
+levels.append(level2Btn);
+
+/**
+ *
+ * setting up the actual board
+ *
+ * */
+const main = () => {
+  const board = createBoard(BOARD_SIZE, BOMBS);
+  // console.log(board);
+
+  board.forEach((row) => {
+    row.forEach((tile) => {
+      boardDiv.append(tile.tileDiv);
+      tile.tileDiv.addEventListener("click", () => {
+        revealTile(board, tile);
+        checkGameOver(board, tile);
+      });
+      tile.tileDiv.addEventListener("contextmenu", (e) => {
+        e.preventDefault();
+        markTile(board, tile);
+      });
     });
-
-    //right click listener
-    tile.oncontextmenu = function (e) {
-      e.preventDefault();
-      addMarked(tile);
-    };
-  }
-
-  //add adj numbers
-  for (let i = 0; i < tiles.length; i++) {
-    //variable to identify the left and right edge in a 10x10 grid
-    const leftEdge = i % width === 0;
-    const rightEdge = i === width - 1;
-    let bombNearby = 0;
-
-    if (tiles[i].classList.contains("safe")) {
-      //checking if west tile contains bomb, if true number to appear on selected tile ++.
-      if (i > 0 && !leftEdge && tiles[i - 1].classList.contains("bomb")) {
-        bombNearby++;
-      }
-
-      //check north-east tile
-      if (
-        i > 9 &&
-        !rightEdge &&
-        tiles[i + 1 - width].classList.contains("bomb")
-      ) {
-        bombNearby++;
-      }
-
-      // check north tile
-      if (i > 10 && tiles[i - width].classList.contains("bomb")) {
-        bombNearby++;
-      }
-
-      // check northwest tile
-      if (
-        i > 11 &&
-        !leftEdge &&
-        tiles[i - 1 - width].classList.contains("bomb")
-      ) {
-        bombNearby++;
-      }
-
-      //check east tile
-      if (i < 98 && !rightEdge && tiles[i + 1].classList.contains("bomb")) {
-        bombNearby++;
-      }
-
-      //check southwest tile
-      if (
-        i < 90 &&
-        !leftEdge &&
-        tiles[i - 1 + width].classList.contains("bomb")
-      ) {
-        bombNearby++;
-      }
-
-      //check southeast tile
-      if (
-        i < 88 &&
-        !rightEdge &&
-        tiles[i + 1 + width].classList.contains("bomb")
-      ) {
-        bombNearby++;
-      }
-
-      //check south tile
-      if (i < 89 && tiles[i + width].classList.contains("bomb")) {
-        bombNearby++;
-      }
-      //
-      tiles[i].setAttribute("data", bombNearby);
-    }
-  }
-}
-
-createBoard();
-
-//when left click on a tile
-function click(tile) {
-  let tileId = tile.id;
-
-  if (isGameOver) {
-    return;
-  } else if (
-    tile.classList.contains("checked") ||
-    tile.classList.contains("markers")
-  ) {
-    return;
-  } else if (tile.classList.contains("bomb")) {
-    gameOver(tile);
-  } else {
-    let number = tile.getAttribute("data");
-    if (number != 0) {
-      tile.classList.add("checked"); // add another class to the tile
-      tile.classList.remove("hidden");
-      tile.innerHTML = number;
-      if (number == 1) {
-        tile.classList.add("one");
-      }
-      if (number == 2) {
-        tile.classList.add("two");
-      }
-      if (number == 3) {
-        tile.classList.add("three");
-      }
-      if (number == 4) {
-        tile.classList.add("four");
-      }
-      return;
-    }
-  }
-
-  //if none of the conditions are met this check tile will run.
-  //meaning the tile that has data number 0 will fan out after goin thru a recursion
-  //this will break when it fans out to a tile with a data number > 0
-  checkTile(tile, tileId);
-  tile.classList.add("checked"); // if the number === 0 it is only given a class, innerHTML given.
-  tile.classList.remove("hidden");
-}
-
-//when rightclick on the tile
-
-function addMarked(tile) {
-  if (isGameOver) {
-    return;
-  } else if (!tile.classList.contains("checked") && markers < bombs) {
-    if (!tile.classList.contains("markers")) {
-      tile.classList.add("markers");
-      tile.innerHTML = "❓";
-      markers++;
-      bombsMarked.innerHTML = `💣 ${bombs - markers} left 💣`;
-      checkForWin();
-    } else {
-      tile.classList.remove("markers");
-      tile.innerHTML = "";
-      markers--;
-      bombsMarked.innerHTML = `💣 ${bombs - markers} left 💣`;
-    }
-  }
-}
-
-function gameOver(tile) {
-  alert("You have triggered the bomb! Game over.");
-  isGameOver = true;
-
-  tiles.forEach((tile) => {
-    if (tile.classList.contains("bomb")) {
-      tile.innerHTML = "💥";
-      tile.classList.remove("hidden");
-    }
   });
+
+  boardDiv.style.setProperty("--size", BOARD_SIZE);
+};
+
+/**
+ *
+ * Functions
+ *
+ */
+
+function markTile(board, tile) {
+  console.log(tile);
+  if (isGameOver) {
+    return;
+  }
+  if (tile.status !== "HIDDEN" && tile.status !== "MARKED") {
+    return;
+  }
+
+  if (tile.status === "MARKED") {
+    tile.status = "HIDDEN";
+    marked--;
+    h2.textContent = `Bombs Left: ${BOMBS - marked}`;
+    return;
+  }
+
+  if (tile.status === "HIDDEN" && marked < BOMBS) {
+    tile.status = "MARKED";
+    marked++;
+    h2.textContent = `Bombs Left: ${BOMBS - marked}`;
+    checkWin(board);
+    return;
+  }
 }
 
-//similar method to the above for checkign adj tiles
-function checkTile(tile, tileId) {
-  const leftEdge = tileId % width === 0;
-  const rightEdge = tileId % width === width - 1;
+function revealTile(board, tile) {
+  // console.log(tile);
+  if (isGameOver) {
+    return;
+  }
+  if (tile.status !== "HIDDEN") {
+    return;
+  }
 
-  setTimeout(() => {
-    if (tileId > 0 && !leftEdge) {
-      const newId = parseInt(tileId) - 1;
-      const newTile = document.getElementById(newId);
-      click(newTile);
-    }
+  if (tile.bomb) {
+    tile.status = "BOMB";
+    return;
+  }
 
-    if (tileId > 9 && !rightEdge) {
-      const newId = parseInt(tileId) + 1 - width;
-      const newTile = document.getElementById(newId);
-      click(newTile);
-    }
-
-    if (tileId > 10) {
-      const newId = parseInt(tileId) - width;
-      const newTile = document.getElementById(newId);
-      click(newTile);
-    }
-
-    if (tileId > 11 && !leftEdge) {
-      const newId = parseInt(tileId) - 1 - width;
-      const newTile = document.getElementById(newId);
-      click(newTile);
-    }
-
-    if (tileId < 98 && !rightEdge) {
-      const newId = parseInt(tileId) + 1;
-      const newTile = document.getElementById(newId);
-      click(newTile);
-    }
-
-    if (tileId < 90 && !leftEdge) {
-      const newId = parseInt(tileId) - 1 + width;
-      const newTile = document.getElementById(newId);
-      click(newTile);
-    }
-
-    if (tileId < 88 && !rightEdge) {
-      const newId = parseInt(tileId) + 1 + width;
-      const newTile = document.getElementById(newId);
-      click(newTile);
-    }
-
-    if (tileId < 89) {
-      const newId = parseInt(tileId) + width;
-      const newTile = document.getElementById(newId);
-      click(newTile);
-    }
-  }, 10);
+  tile.status = "NUMBER";
+  const adjTiles = nearbyTiles(board, tile);
+  const bombs = adjTiles.filter((tile) => tile.bomb);
+  if (bombs.length === 0) {
+    adjTiles.forEach(revealTile.bind(null, board));
+  } else {
+    tile.tileDiv.textContent = bombs.length;
+  }
 }
 
-function checkForWin() {
+function nearbyTiles(board, { x, y }) {
+  const tiles = [];
+
+  for (let xOffset = -1; xOffset <= 1; xOffset++) {
+    for (let yOffset = -1; yOffset <= 1; yOffset++) {
+      const tile = board[x + xOffset]?.[y + yOffset];
+      if (tile) {
+        tiles.push(tile);
+      }
+    }
+  }
+
+  return tiles;
+}
+
+function getBombPositions(size, bombs) {
+  const positions = [];
+
+  while (positions.length < bombs) {
+    const position = {
+      x: randomNumber(size),
+      y: randomNumber(size),
+    };
+
+    if (!positions.some((p) => positionMatch(p, position))) {
+      positions.push(position);
+    }
+  }
+
+  return positions;
+}
+
+function randomNumber(size) {
+  return Math.floor(Math.random() * size);
+}
+
+function positionMatch(a, b) {
+  return a.x === b.x && a.y === b.y;
+}
+
+const checkGameOver = (board, tile) => {
+  if (tile.status === "BOMB") {
+    // console.log(board);
+    board.forEach((row) => {
+      row.forEach((tile) => {
+        if (tile.bomb) {
+          tile.status = "BOMB";
+          console.log(tile);
+        }
+      });
+    });
+    isGameOver = true;
+    alert("You triggered a bomb! game over! :(");
+    return;
+  } else {
+    return;
+  }
+};
+
+const checkWin = (board) => {
+  console.log(board);
   let match = 0;
 
-  for (let i = 0; i < tiles.length; i++) {
-    if (
-      tiles[i].classList.contains("markers") &&
-      tiles[i].classList.contains("bomb")
-    ) {
-      match++;
-    }
-  }
-  if (match === bombs) {
-    alert("You have won! You found all the bombs!");
-    isGameOver = true;
-
-    tiles.forEach((tile) => {
-      if (tile.classList.contains("bomb")) {
-        tile.innerHTML = "💣";
-        tile.classList.remove("hidden");
-        tile.classList.remove("markers");
+  board.forEach((row) => {
+    row.forEach((tile) => {
+      if (tile.status === "MARKED" && tile.bomb == true) {
+        match++;
       }
     });
+  });
+  if (match === BOMBS) {
+    alert("you've won!");
   }
-}
+};
